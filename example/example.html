@@ -1,0 +1,130 @@
+<!doctype html>
+<html ng-app="myApp">
+<head>
+	<title>Test</title>
+	<style>
+		#dropped-blocks .dragblock {
+			float: left;
+		}
+		.dragblock {
+			width: 100px;
+			height: 50px;
+			margin: 5px;
+			border: 5px solid white;
+		}
+		.dropblock {
+			width: 100px;
+			height: 50px;
+			border: 5px solid white;
+			color: white;
+			background: repeating-linear-gradient( 45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px );
+		}
+		.cid-target {
+			background-color: forestgreen;
+			background: repeating-linear-gradient( 45deg, forestgreen, forestgreen 10px, lightgreen 10px, lightgreen 20px );
+		}
+		.cid-target-invalid {
+			background-color: red;
+			background: repeating-linear-gradient( 45deg, red, red 10px, orangered 10px, orangered 20px );
+		}
+		.cid-target.cid-over {
+			border-color: green;
+		}
+		.cid-target-invalid.cid-over-invalid {
+			border-color: red;
+		}
+		.cid-dragging {
+			background-color: lightgray !important;
+		}
+		.column {
+			float: left;
+			width: 200px;
+		}
+	</style>
+</head>
+<body ng-controller="myController as dragdrop">
+
+
+
+	<!--No jQuery required, but will work with jQuery-->
+	<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>-->
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.0/angular.min.js"></script>
+	<script src="../script/cid-drag-drop.js"></script>
+
+	<div class="column">
+		<h2>Draggable</h2>
+		<!--Dynamic draggable blocks-->
+		<div class="dragblock" cid-draggable="" drag-img="{ src: block.img, x: 0, y: -10 }" drag-data="block" ng-style="{'background-color': block.color}" ng-repeat="block in dragdrop.blocks"></div>
+		<!--Static draggable blocks example-->
+		<div class="dragblock" cid-draggable="" drag-img="{ src: 'example2.png' }" drag-data="{ some: 'static data 1', exists: true, color: 'brown' }" style="background-color: brown"></div>
+		<div class="dragblock" cid-draggable="" drag-img="'example1.jpg'" drag-data="{ some: 'static data 2', exists: true, color: 'pink' }" style="background-color: hotpink"></div>
+
+		<h2>Droppable</h2>
+		<div class="dropblock" cid-drop-target="" drop-effect="link" on-enter="dragdrop.enter(dragId, dropId, dragData);" on-drop="dragdrop.drop(dragId, dropId, dragData);" on-leave="dragdrop.leave(dragId, dropId, dragData);"></div>
+	</div>
+
+	<div class="column">
+		<h2>Draggable</h2>
+		<div class="dragblock" cid-draggable="group2" drag-data="block" ng-style="{'background-color': block.color}" ng-repeat="block in dragdrop.blocks"></div>
+
+		<h2>Droppable</h2>
+		<div class="dropblock" cid-drop-target="group2" drop-effect="link" on-enter="dragdrop.enter(dragId, dropId, dragData);" on-drop="dragdrop.drop(dragId, dropId, dragData);" on-leave="dragdrop.leave(dragId, dropId, dragData);"></div>
+	</div>
+
+	<a href="javascript:void(0);" ng-click="dragdrop.update('example1.jpg');">verander</a>
+	<a href="javascript:void(0);" ng-click="dragdrop.update('example2.png');">verander</a>
+
+	<div class="column" ng-if="dragdrop.hover">
+		<h2>Hovering</h2>
+		<p>
+			Source: {{ dragdrop.hover.dragId }}<br />
+			Destination: {{ dragdrop.hover.dropId }}<br />
+			Data: {{ dragdrop.hover.data }}
+		</p>
+	</div>
+	<div style="clear: both;"></div>
+	<h2>Dropped</h2>
+	<div id="dropped-blocks"></div>
+	<script>
+		angular.module('myApp', ['cid.dragdrop'])
+		.controller('myController', [function() {
+			var self = this;
+			self.blocks = [
+				{ some: 'data 1', exists: true, color: 'green', img : 'example2.png' },
+				{ some: 'data 2', exists: true, color: 'yellow', img: 'example2.png' },
+				{ some: 'data 3', exists: false, color: 'blue', img: 'example2.png' },
+				{ some: 'data 4', exists: true, color: 'purple', img: 'example2.png' },
+			];
+			self.logs = [];
+			self.dropped = [];
+			self.hover = null;
+
+			self.update = function(nw) {
+				for (var i = 0; i < self.blocks.length; i++) {
+					self.blocks[i].img = nw;
+				}
+			}
+
+			self.enter = function(dragId, dropId, data) {
+				self.hover = {
+					dragId: dragId,
+					dropId: dropId,
+					data: data
+				};
+			}
+			self.leave = function(dragId, dropId, data) {
+				self.hover = null;
+			}
+			self.drop = function(dragId, dropId, data) {
+				self.hover = null;
+				var el = angular.element(document.getElementById(dragId));
+				var copy = el.clone();
+				copy.removeClass('cid-dragging');
+				angular.element(document.getElementById('dropped-blocks')).append(copy);
+			}
+			
+		}])
+		;
+	</script>
+</body>
+</html>
