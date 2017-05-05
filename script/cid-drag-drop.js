@@ -111,8 +111,9 @@
 			},
 			link: function(scope, el, attrs, controller) {
 				var id = angular.element(el).attr("id");
+				var refCounter = 0;
 				if (!id) {
-					id = 'cid-drop-element-' + (dropElementId++)
+					id = 'cid-drop-element-' + (dropElementId++);
 					angular.element(el).attr("id", id);
 				}
 
@@ -133,13 +134,13 @@
 					var data = cidDragDropManager.getData();
 					var group = attrs.cidDropTarget || '';
 					if (data && group == data.group) {
-						// this / e.target is the current hover target.
-						angular.element(e.target).addClass('cid-over');
+						refCounter++;
+						el.addClass('cid-over');
 						scope.$apply(function() {
 							scope.onEnter({ dragId: data.id, dropId: id, dragData: data.data });
 						});
 					} else {
-						angular.element(e.target).addClass('cid-over-invalid');
+						el.addClass('cid-over-invalid');
 					}
 				});
 
@@ -147,12 +148,16 @@
 					var data = cidDragDropManager.getData();
 					var group = attrs.cidDropTarget || '';
 					if (data && group == data.group) {
-						angular.element(e.target).removeClass('cid-over');  // this / e.target is previous target element.
-						scope.$apply(function() {
-							scope.onLeave({ dragId: data.id, dropId: id, dragData: data.data });
-						});
+						refCounter--;
+						if (refCounter <= 0) {
+							refCounter = 0;
+							el.removeClass('cid-over');
+							scope.$apply(function() {
+								scope.onLeave({ dragId: data.id, dropId: id, dragData: data.data });
+							});
+						}
 					} else {
-						angular.element(e.target).removeClass('cid-over-invalid');  // this / e.target is previous target element.
+						el.removeClass('cid-over-invalid');
 					}
 				});
 
@@ -167,6 +172,10 @@
 					var json = e.dataTransfer.getData("text");
 					var data = JSON.parse(json);
 					cidDragDropManager.clearData();
+
+					refCounter = 0;
+					el.removeClass('cid-over');
+					el.removeClass('cid-over-invalid');
 
 					scope.$apply(function() {
 						scope.onDrop({ dragId: data.id, dropId: id, dragData: data.data });
